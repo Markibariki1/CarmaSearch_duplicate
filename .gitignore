@@ -49,6 +49,7 @@ logs/
 .env.*.local
 .env.production
 .env.development
+.env.optimized
 
 # vercel
 .vercel
