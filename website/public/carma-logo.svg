@@ -1,0 +1,40 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Central dot -->
+  <circle cx="64" cy="64" r="3" fill="#ff6b35"/>
+  
+  <!-- Top C-shape (opens left) -->
+  <path d="M 36 36 A 28 28 0 0 1 92 36" 
+        fill="none" 
+        stroke="#ff6b35" 
+        stroke-width="10" 
+        stroke-linecap="round"/>
+  <!-- Top C-shape internal line -->
+  <line x1="88" y1="36" x2="84" y2="36" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Left C-shape (opens right) -->
+  <path d="M 36 36 A 28 28 0 0 0 36 92" 
+        fill="none" 
+        stroke="#ff6b35" 
+        stroke-width="10" 
+        stroke-linecap="round"/>
+  <!-- Left C-shape internal line -->
+  <line x1="36" y1="40" x2="36" y2="44" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Right C-shape (opens left) -->
+  <path d="M 92 36 A 28 28 0 0 0 92 92" 
+        fill="none" 
+        stroke="#ff6b35" 
+        stroke-width="10" 
+        stroke-linecap="round"/>
+  <!-- Right C-shape internal line -->
+  <line x1="92" y1="88" x2="92" y2="84" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Bottom C-shape (opens right) -->
+  <path d="M 36 92 A 28 28 0 0 1 92 92" 
+        fill="none" 
+        stroke="#ff6b35" 
+        stroke-width="10" 
+        stroke-linecap="round"/>
+  <!-- Bottom C-shape internal line -->
+  <line x1="40" y1="92" x2="44" y2="92" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+</svg>

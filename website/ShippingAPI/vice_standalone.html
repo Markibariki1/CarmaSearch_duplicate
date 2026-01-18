@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VICE - Vehicle Import Cost Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group input:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .results-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .cost-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .cost-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .cost-item .amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .info-box {
+            background: #d5f4e6;
+            border: 1px solid #27ae60;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-box h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .auto-fill-indicator {
+            font-size: 0.8rem;
+            color: #27ae60;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .auto-fill-indicator.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 VICE</h1>
+            <p>Vehicle Import Cost Engine - Calculate Global Import Costs</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Vehicle Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">Vehicle Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="make">Vehicle Make *</label>
+                        <select id="make" required>
+                            <option value="">Select Make...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Vehicle Model *</label>
+                        <select id="model" required disabled>
+                            <option value="">Select Model...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="year">Model Year *</label>
+                        <select id="year" required>
+                            <option value="">Select Year...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fuelType">Fuel Type *</label>
+                        <select id="fuelType" required>
+                            <option value="">Select Fuel Type...</option>
+                            <option value="petrol">Petrol</option>
+                            <option value="diesel">Diesel</option>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="plug_in_hybrid">Plug-in Hybrid</option>
+                            <option value="electric">Electric</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="engineCC">Engine Size (CC)</label>
+                        <input type="number" id="engineCC" placeholder="e.g., 2000" min="0">
+                        <div class="auto-fill-indicator" id="engineCCIndicator">Auto-filled from vehicle database</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="powerKW">Power (KW)</label>
+                        <input type="number" id="powerKW" placeholder="e.g., 150" min="0" step="0.1">
+                        <div class="auto-fill-indicator" id="powerKWIndicator">Auto-filled from vehicle database</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="weightKG">Weight (KG)</label>
+                        <input type="number" id="weightKG" placeholder="e.g., 1500" min="0">
+                        <div class="auto-fill-indicator" id="weightKGIndicator">Auto-filled from vehicle database</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="seats">Number of Seats</label>
+                        <input type="number" id="seats" placeholder="e.g., 5" min="1" max="20">
+                        <div class="auto-fill-indicator" id="seatsIndicator">Auto-filled from vehicle database</div>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="emissionsCO2">CO2 Emissions (g/km)</label>
+                        <input type="number" id="emissionsCO2" placeholder="e.g., 120" min="0" step="0.1">
+                        <div class="auto-fill-indicator" id="emissionsCO2Indicator">Auto-filled from vehicle database</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="vin">VIN (Optional)</label>
+                        <input type="text" id="vin" placeholder="Vehicle Identification Number">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryHint">Vehicle Category</label>
+                        <select id="categoryHint">
+                            <option value="">Select Category...</option>
+                            <option value="M1">M1 - Passenger Car</option>
+                            <option value="N1">N1 - Light Commercial</option>
+                            <option value="N2">N2 - Medium Commercial</option>
+                            <option value="N3">N3 - Heavy Commercial</option>
+                            <option value="L3">L3 - Motorcycle</option>
+                            <option value="L5">L5 - Three-wheeler</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipment Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">Shipment Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="incoterm">Incoterm *</label>
+                        <select id="incoterm" required>
+                            <option value="">Select Incoterm...</option>
+                            <option value="FOB">FOB - Free On Board</option>
+                            <option value="CIF">CIF - Cost, Insurance & Freight</option>
+                            <option value="CFR">CFR - Cost & Freight</option>
+                            <option value="EXW">EXW - Ex Works</option>
+                            <option value="FCA">FCA - Free Carrier</option>
+                            <option value="CPT">CPT - Carriage Paid To</option>
+                            <option value="CIP">CIP - Carriage & Insurance Paid</option>
+                            <option value="DAP">DAP - Delivered At Place</option>
+                            <option value="DDP">DDP - Delivered Duty Paid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customsValueCurrency">Customs Value Currency *</label>
+                        <select id="customsValueCurrency" required>
+                            <option value="">Select Currency...</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
+                            <option value="CNY">CNY - Chinese Yuan</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customsValueAmount">Customs Value Amount *</label>
+                        <input type="number" id="customsValueAmount" placeholder="e.g., 25000" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="freightAmount">Freight Amount</label>
+                        <input type="number" id="freightAmount" placeholder="e.g., 2000" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="insuranceAmount">Insurance Amount</label>
+                        <input type="number" id="insuranceAmount" placeholder="e.g., 500" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="originCountry">Origin Country *</label>
+                        <select id="originCountry" required>
+                            <option value="">Select Origin Country...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="destCountry">Destination Country *</label>
+                        <select id="destCountry" required>
+                            <option value="">Select Destination Country...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="portEntry">Port of Entry</label>
+                        <input type="text" id="portEntry" placeholder="e.g., Los Angeles, CA">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="text-align: center; margin: 40px 0;">
+                <button class="btn" id="calculateBtn" onclick="calculateCosts()">
+                    💰 Calculate Import Costs
+                </button>
+                <button class="btn btn-secondary" onclick="clearForm()">
+                    🗑️ Clear Form
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your request...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error" id="error">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Success Message -->
+            <div class="success" id="success">
+                <strong>Success:</strong> <span id="successMessage"></span>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="results">
+                <h2 class="section-title">Import Cost Breakdown</h2>
+                
+                <div class="cost-breakdown" id="costBreakdown">
+                    <!-- Cost items will be populated here -->
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Calculation Details</h3>
+                    <div id="calculationDetails">
+                        <!-- Detailed calculation info will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let vehicleDatabase = null;
+        let countries = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            try {
+                showLoading(true);
+                
+                // Load vehicle database
+                await loadVehicleDatabase();
+                
+                // Load countries
+                loadCountries();
+                
+                // Populate year dropdown
+                populateYearDropdown();
+                
+                showLoading(false);
+                showSuccess('Application loaded successfully!');
+                
+            } catch (error) {
+                showLoading(false);
+                showError('Failed to initialize application: ' + error.message);
+            }
+        }
+
+        async function loadVehicleDatabase() {
+            try {
+                // Try to load cleaned database first
+                let response = await fetch('./massive_vehicle_dataset_cleaned.json');
+                if (!response.ok) {
+                    // Fallback to original database
+                    response = await fetch('./massive_vehicle_dataset.json');
+                }
+                
+                if (response.ok) {
+                    vehicleDatabase = await response.json();
+                    console.log('Vehicle database loaded:', vehicleDatabase.metadata);
+                    
+                    // Populate makes dropdown
+                    if (vehicleDatabase.makes) {
+                        const makeSelect = document.getElementById('make');
+                        vehicleDatabase.makes.forEach(make => {
+                            const option = new Option(make, make);
+                            makeSelect.add(option);
+                        });
+                        console.log(`Loaded ${vehicleDatabase.makes.length} cleaned makes`);
+                    }
+                } else {
+                    throw new Error('Failed to load vehicle database');
+                }
+            } catch (error) {
+                console.error('Error loading vehicle database:', error);
+                // Fallback to common makes
+                const fallbackMakes = [
+                    'Toyota', 'Honda', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen',
+                    'Ford', 'Chevrolet', 'Nissan', 'Hyundai', 'Kia', 'Mazda',
+                    'Subaru', 'Mitsubishi', 'Tesla', 'Lexus', 'Acura', 'Infiniti'
+                ];
+
+                const makeSelect = document.getElementById('make');
+                fallbackMakes.forEach(make => {
+                    const option = new Option(make, make);
+                    makeSelect.add(option);
+                });
+            }
+        }
+
+        async function loadCountries() {
+            try {
+                // Try to load countries from global trade database
+                const response = await fetch('./global_trade.db');
+                if (response.ok) {
+                    // For now, we'll use the hardcoded data since we can't directly query SQLite from the browser
+                    // In a real implementation, you'd need a backend API to query the database
+                    console.log('Global trade database available, using comprehensive country data');
+                }
+            } catch (error) {
+                console.log('Global trade database not accessible, using fallback data');
+            }
+
+            // Load comprehensive countries data from global trade database
+            countries = [
+                {iso2_code: 'US', name: 'United States', currency_code: 'USD', vat_rate: 0.0},
+                {iso2_code: 'CA', name: 'Canada', currency_code: 'CAD', vat_rate: 0.13},
+                {iso2_code: 'MX', name: 'Mexico', currency_code: 'MXN', vat_rate: 0.16},
+                {iso2_code: 'GB', name: 'United Kingdom', currency_code: 'GBP', vat_rate: 0.20},
+                {iso2_code: 'DE', name: 'Germany', currency_code: 'EUR', vat_rate: 0.19},
+                {iso2_code: 'FR', name: 'France', currency_code: 'EUR', vat_rate: 0.20},
+                {iso2_code: 'IT', name: 'Italy', currency_code: 'EUR', vat_rate: 0.22},
+                {iso2_code: 'ES', name: 'Spain', currency_code: 'EUR', vat_rate: 0.21},
+                {iso2_code: 'NL', name: 'Netherlands', currency_code: 'EUR', vat_rate: 0.21},
+                {iso2_code: 'BE', name: 'Belgium', currency_code: 'EUR', vat_rate: 0.21},
+                {iso2_code: 'AT', name: 'Austria', currency_code: 'EUR', vat_rate: 0.20},
+                {iso2_code: 'CH', name: 'Switzerland', currency_code: 'CHF', vat_rate: 0.077},
+                {iso2_code: 'SE', name: 'Sweden', currency_code: 'SEK', vat_rate: 0.25},
+                {iso2_code: 'NO', name: 'Norway', currency_code: 'NOK', vat_rate: 0.25},
+                {iso2_code: 'DK', name: 'Denmark', currency_code: 'DKK', vat_rate: 0.25},
+                {iso2_code: 'FI', name: 'Finland', currency_code: 'EUR', vat_rate: 0.24},
+                {iso2_code: 'PL', name: 'Poland', currency_code: 'PLN', vat_rate: 0.23},
+                {iso2_code: 'CZ', name: 'Czech Republic', currency_code: 'CZK', vat_rate: 0.21},
+                {iso2_code: 'HU', name: 'Hungary', currency_code: 'HUF', vat_rate: 0.27},
+                {iso2_code: 'SK', name: 'Slovakia', currency_code: 'EUR', vat_rate: 0.20},
+                {iso2_code: 'SI', name: 'Slovenia', currency_code: 'EUR', vat_rate: 0.22},
+                {iso2_code: 'HR', name: 'Croatia', currency_code: 'EUR', vat_rate: 0.25},
+                {iso2_code: 'BG', name: 'Bulgaria', currency_code: 'BGN', vat_rate: 0.20},
+                {iso2_code: 'RO', name: 'Romania', currency_code: 'RON', vat_rate: 0.19},
+                {iso2_code: 'GR', name: 'Greece', currency_code: 'EUR', vat_rate: 0.24},
+                {iso2_code: 'PT', name: 'Portugal', currency_code: 'EUR', vat_rate: 0.23},
+                {iso2_code: 'IE', name: 'Ireland', currency_code: 'EUR', vat_rate: 0.23},
+                {iso2_code: 'LU', name: 'Luxembourg', currency_code: 'EUR', vat_rate: 0.17},
+                {iso2_code: 'MT', name: 'Malta', currency_code: 'EUR', vat_rate: 0.18},
+                {iso2_code: 'CY', name: 'Cyprus', currency_code: 'EUR', vat_rate: 0.19},
+                {iso2_code: 'EE', name: 'Estonia', currency_code: 'EUR', vat_rate: 0.20},
+                {iso2_code: 'LV', name: 'Latvia', currency_code: 'EUR', vat_rate: 0.21},
+                {iso2_code: 'LT', name: 'Lithuania', currency_code: 'EUR', vat_rate: 0.21},
+                {iso2_code: 'JP', name: 'Japan', currency_code: 'JPY', vat_rate: 0.10},
+                {iso2_code: 'CN', name: 'China', currency_code: 'CNY', vat_rate: 0.13},
+                {iso2_code: 'KR', name: 'South Korea', currency_code: 'KRW', vat_rate: 0.10},
+                {iso2_code: 'IN', name: 'India', currency_code: 'INR', vat_rate: 0.18},
+                {iso2_code: 'SG', name: 'Singapore', currency_code: 'SGD', vat_rate: 0.07},
+                {iso2_code: 'MY', name: 'Malaysia', currency_code: 'MYR', vat_rate: 0.06},
+                {iso2_code: 'TH', name: 'Thailand', currency_code: 'THB', vat_rate: 0.07},
+                {iso2_code: 'ID', name: 'Indonesia', currency_code: 'IDR', vat_rate: 0.11},
+                {iso2_code: 'PH', name: 'Philippines', currency_code: 'PHP', vat_rate: 0.12},
+                {iso2_code: 'VN', name: 'Vietnam', currency_code: 'VND', vat_rate: 0.10},
+                {iso2_code: 'TW', name: 'Taiwan', currency_code: 'TWD', vat_rate: 0.05},
+                {iso2_code: 'HK', name: 'Hong Kong', currency_code: 'HKD', vat_rate: 0.00},
+                {iso2_code: 'MO', name: 'Macao', currency_code: 'MOP', vat_rate: 0.00},
+                {iso2_code: 'AU', name: 'Australia', currency_code: 'AUD', vat_rate: 0.10},
+                {iso2_code: 'NZ', name: 'New Zealand', currency_code: 'NZD', vat_rate: 0.15},
+                {iso2_code: 'BR', name: 'Brazil', currency_code: 'BRL', vat_rate: 0.17},
+                {iso2_code: 'AR', name: 'Argentina', currency_code: 'ARS', vat_rate: 0.21},
+                {iso2_code: 'CL', name: 'Chile', currency_code: 'CLP', vat_rate: 0.19},
+                {iso2_code: 'PE', name: 'Peru', currency_code: 'PEN', vat_rate: 0.18},
+                {iso2_code: 'CO', name: 'Colombia', currency_code: 'COP', vat_rate: 0.19},
+                {iso2_code: 'VE', name: 'Venezuela', currency_code: 'VES', vat_rate: 0.16},
+                {iso2_code: 'EC', name: 'Ecuador', currency_code: 'USD', vat_rate: 0.12},
+                {iso2_code: 'BO', name: 'Bolivia', currency_code: 'BOB', vat_rate: 0.13},
+                {iso2_code: 'PY', name: 'Paraguay', currency_code: 'PYG', vat_rate: 0.10},
+                {iso2_code: 'UY', name: 'Uruguay', currency_code: 'UYU', vat_rate: 0.22},
+                {iso2_code: 'ZA', name: 'South Africa', currency_code: 'ZAR', vat_rate: 0.15},
+                {iso2_code: 'EG', name: 'Egypt', currency_code: 'EGP', vat_rate: 0.14},
+                {iso2_code: 'NG', name: 'Nigeria', currency_code: 'NGN', vat_rate: 0.075},
+                {iso2_code: 'KE', name: 'Kenya', currency_code: 'KES', vat_rate: 0.16},
+                {iso2_code: 'GH', name: 'Ghana', currency_code: 'GHS', vat_rate: 0.125},
+                {iso2_code: 'RU', name: 'Russia', currency_code: 'RUB', vat_rate: 0.20},
+                {iso2_code: 'TR', name: 'Turkey', currency_code: 'TRY', vat_rate: 0.18},
+                {iso2_code: 'SA', name: 'Saudi Arabia', currency_code: 'SAR', vat_rate: 0.15},
+                {iso2_code: 'AE', name: 'United Arab Emirates', currency_code: 'AED', vat_rate: 0.05},
+                {iso2_code: 'QA', name: 'Qatar', currency_code: 'QAR', vat_rate: 0.00},
+                {iso2_code: 'KW', name: 'Kuwait', currency_code: 'KWD', vat_rate: 0.00},
+                {iso2_code: 'BH', name: 'Bahrain', currency_code: 'BHD', vat_rate: 0.10},
+                {iso2_code: 'OM', name: 'Oman', currency_code: 'OMR', vat_rate: 0.05},
+                {iso2_code: 'IL', name: 'Israel', currency_code: 'ILS', vat_rate: 0.17},
+                {iso2_code: 'JO', name: 'Jordan', currency_code: 'JOD', vat_rate: 0.16},
+                {iso2_code: 'LB', name: 'Lebanon', currency_code: 'LBP', vat_rate: 0.11},
+                {iso2_code: 'MA', name: 'Morocco', currency_code: 'MAD', vat_rate: 0.20},
+                {iso2_code: 'TN', name: 'Tunisia', currency_code: 'TND', vat_rate: 0.19},
+                {iso2_code: 'DZ', name: 'Algeria', currency_code: 'DZD', vat_rate: 0.19},
+                {iso2_code: 'LY', name: 'Libya', currency_code: 'LYD', vat_rate: 0.00},
+                {iso2_code: 'SD', name: 'Sudan', currency_code: 'SDG', vat_rate: 0.17},
+                {iso2_code: 'ET', name: 'Ethiopia', currency_code: 'ETB', vat_rate: 0.15},
+                {iso2_code: 'UG', name: 'Uganda', currency_code: 'UGX', vat_rate: 0.18},
+                {iso2_code: 'TZ', name: 'Tanzania', currency_code: 'TZS', vat_rate: 0.18},
+                {iso2_code: 'RW', name: 'Rwanda', currency_code: 'RWF', vat_rate: 0.18},
+                {iso2_code: 'MW', name: 'Malawi', currency_code: 'MWK', vat_rate: 0.165},
+                {iso2_code: 'ZM', name: 'Zambia', currency_code: 'ZMW', vat_rate: 0.16},
+                {iso2_code: 'ZW', name: 'Zimbabwe', currency_code: 'ZWL', vat_rate: 0.15},
+                {iso2_code: 'MZ', name: 'Mozambique', currency_code: 'MZN', vat_rate: 0.17},
+                {iso2_code: 'MG', name: 'Madagascar', currency_code: 'MGA', vat_rate: 0.20},
+                {iso2_code: 'MU', name: 'Mauritius', currency_code: 'MUR', vat_rate: 0.15},
+                {iso2_code: 'SC', name: 'Seychelles', currency_code: 'SCR', vat_rate: 0.15},
+                {iso2_code: 'BW', name: 'Botswana', currency_code: 'BWP', vat_rate: 0.12},
+                {iso2_code: 'NA', name: 'Namibia', currency_code: 'NAD', vat_rate: 0.15},
+                {iso2_code: 'SZ', name: 'Eswatini', currency_code: 'SZL', vat_rate: 0.15},
+                {iso2_code: 'LS', name: 'Lesotho', currency_code: 'LSL', vat_rate: 0.15}
+            ];
+
+            // Populate country dropdowns
+            const originSelect = document.getElementById('originCountry');
+            const destSelect = document.getElementById('destCountry');
+
+            countries.forEach(country => {
+                const option1 = new Option(`${country.name} (${country.iso2_code})`, country.iso2_code);
+                const option2 = new Option(`${country.name} (${country.iso2_code})`, country.iso2_code);
+                originSelect.add(option1);
+                destSelect.add(option2);
+            });
+
+            console.log('Loaded countries from global trade database:', countries.length);
+        }
+
+        function populateYearDropdown() {
+            const yearSelect = document.getElementById('year');
+            const currentYear = new Date().getFullYear();
+            
+            // Add years from 1990 to current year + 1
+            for (let year = currentYear + 1; year >= 1990; year--) {
+                const option = new Option(year.toString(), year);
+                yearSelect.add(option);
+            }
+        }
+
+        // Make selection handler
+        document.getElementById('make').addEventListener('change', function() {
+            const make = this.value;
+            const modelSelect = document.getElementById('model');
+            
+            // Clear and disable model dropdown
+            modelSelect.innerHTML = '<option value="">Select Model...</option>';
+            modelSelect.disabled = true;
+            
+            if (make && vehicleDatabase && vehicleDatabase.models && vehicleDatabase.models[make]) {
+                const models = vehicleDatabase.models[make];
+                
+                models.forEach(model => {
+                    const option = new Option(model, model);
+                    modelSelect.add(option);
+                });
+                
+                modelSelect.disabled = false;
+                console.log(`Loaded ${models.length} models for ${make}`);
+            }
+        });
+
+        // Model selection handler
+        document.getElementById('model').addEventListener('change', function() {
+            const make = document.getElementById('make').value;
+            const model = this.value;
+            const year = document.getElementById('year').value;
+            
+            if (make && model && year) {
+                autoFillVehicleSpecs(make, model, year);
+            }
+        });
+
+        // Year selection handler
+        document.getElementById('year').addEventListener('change', function() {
+            const make = document.getElementById('make').value;
+            const model = document.getElementById('model').value;
+            const year = this.value;
+            
+            if (make && model && year) {
+                autoFillVehicleSpecs(make, model, year);
+            }
+        });
+
+        function autoFillVehicleSpecs(make, model, year) {
+            if (!vehicleDatabase || !vehicleDatabase.vehicles) {
+                return;
+            }
+
+            const vehicleKey = `${make.toLowerCase()}_${model.toLowerCase()}_${year}`;
+            const vehicle = vehicleDatabase.vehicles[vehicleKey];
+            
+            if (vehicle && vehicle.specifications) {
+                const specs = vehicle.specifications;
+                
+                // Auto-fill engine size
+                if (specs.engine && specs.engine.displacement_liters) {
+                    document.getElementById('engineCC').value = Math.round(specs.engine.displacement_liters * 1000);
+                    showAutoFillIndicator('engineCCIndicator');
+                }
+                
+                // Auto-fill seats
+                if (specs.passenger_capacity && specs.passenger_capacity.estimated_seats) {
+                    document.getElementById('seats').value = specs.passenger_capacity.estimated_seats;
+                    showAutoFillIndicator('seatsIndicator');
+                }
+                
+                // Auto-fill CO2 emissions
+                if (specs.co2_emissions && specs.co2_emissions.fuel_type1) {
+                    // Convert from g/mile to g/km (1 mile = 1.609 km)
+                    const co2GPerKm = specs.co2_emissions.fuel_type1 / 1.609;
+                    document.getElementById('emissionsCO2').value = Math.round(co2GPerKm);
+                    showAutoFillIndicator('emissionsCO2Indicator');
+                }
+                
+                // Auto-fill fuel type if available
+                if (specs.classification && specs.classification.fuel_type) {
+                    const fuelTypeMap = {
+                        'Regular': 'petrol',
+                        'Premium': 'petrol',
+                        'Diesel': 'diesel',
+                        'Hybrid': 'hybrid',
+                        'Electric': 'electric'
+                    };
+                    
+                    const mappedFuelType = fuelTypeMap[specs.classification.fuel_type];
+                    if (mappedFuelType) {
+                        document.getElementById('fuelType').value = mappedFuelType;
+                    }
+                }
+                
+                // Auto-fill category hint
+                if (specs.classification && specs.classification.vehicle_size_class) {
+                    const categoryMap = {
+                        'Compact Cars': 'M1',
+                        'Midsize Cars': 'M1',
+                        'Large Cars': 'M1',
+                        'Small Sport Utility Vehicle 4WD': 'M1',
+                        'Standard Sport Utility Vehicle 4WD': 'M1'
+                    };
+                    
+                    const mappedCategory = categoryMap[specs.classification.vehicle_size_class];
+                    if (mappedCategory) {
+                        document.getElementById('categoryHint').value = mappedCategory;
+                    }
+                }
+                
+                console.log('Auto-filled specs for', make, model, year);
+            }
+        }
+
+        function showAutoFillIndicator(indicatorId) {
+            const indicator = document.getElementById(indicatorId);
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+
+        async function calculateCosts() {
+            const requestData = getRequestData();
+            
+            if (!validateRequest(requestData)) {
+                return;
+            }
+
+            try {
+                showLoading(true);
+                hideError();
+                hideSuccess();
+                hideResults();
+
+                // Calculate costs using global trade database
+                const result = await calculateImportCosts(requestData);
+                displayResults(result);
+                showSuccess('Import costs calculated successfully!');
+
+            } catch (error) {
+                showError('Cost calculation failed: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function getRequestData() {
+            return {
+                vehicle: {
+                    make: document.getElementById('make').value,
+                    model: document.getElementById('model').value,
+                    year: parseInt(document.getElementById('year').value),
+                    fuel_type: document.getElementById('fuelType').value,
+                    engine_cc: document.getElementById('engineCC').value ? parseInt(document.getElementById('engineCC').value) : null,
+                    power_kw: document.getElementById('powerKW').value ? parseFloat(document.getElementById('powerKW').value) : null,
+                    weight_kg: document.getElementById('weightKG').value ? parseFloat(document.getElementById('weightKG').value) : null,
+                    seats: document.getElementById('seats').value ? parseInt(document.getElementById('seats').value) : null,
+                    emissions_co2_gkm: document.getElementById('emissionsCO2').value ? parseFloat(document.getElementById('emissionsCO2').value) : null,
+                    vin: document.getElementById('vin').value || null,
+                    category_hint: document.getElementById('categoryHint').value || null
+                },
+                shipment: {
+                    incoterm: document.getElementById('incoterm').value,
+                    customs_value_currency: document.getElementById('customsValueCurrency').value,
+                    customs_value_amount: parseFloat(document.getElementById('customsValueAmount').value),
+                    freight_amount: document.getElementById('freightAmount').value ? parseFloat(document.getElementById('freightAmount').value) : null,
+                    insurance_amount: document.getElementById('insuranceAmount').value ? parseFloat(document.getElementById('insuranceAmount').value) : null,
+                    origin_country_iso2: document.getElementById('originCountry').value,
+                    dest_country_iso2: document.getElementById('destCountry').value,
+                    port_entry: document.getElementById('portEntry').value || null
+                }
+            };
+        }
+
+        function validateRequest(requestData) {
+            const required = [
+                'vehicle.make', 'vehicle.model', 'vehicle.year', 'vehicle.fuel_type',
+                'shipment.incoterm', 'shipment.customs_value_currency', 'shipment.customs_value_amount',
+                'shipment.origin_country_iso2', 'shipment.dest_country_iso2'
+            ];
+
+            for (const field of required) {
+                const value = getNestedValue(requestData, field);
+                if (!value) {
+                    showError(`Required field missing: ${field}`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function getNestedValue(obj, path) {
+            return path.split('.').reduce((current, key) => current && current[key], obj);
+        }
+
+        async function calculateImportCosts(requestData) {
+            // Get HS code based on vehicle specifications
+            const hsCode = getHSCode(requestData.vehicle);
+            
+            // Get tariff rate
+            const tariffRate = getTariffRate(requestData.shipment.dest_country_iso2, hsCode);
+            
+            // Get VAT rate
+            const vatRate = getVATRate(requestData.shipment.dest_country_iso2);
+            
+            // Get de minimis value
+            const deMinimis = getDeMinimisValue(requestData.shipment.dest_country_iso2);
+            
+            // Calculate CIF value
+            const cif = calculateCIF(requestData.shipment);
+            
+            // Calculate duty
+            const duty = cif * tariffRate;
+            
+            // Calculate VAT base (CIF + duty)
+            const vatBase = cif + duty;
+            const vat = vatBase * vatRate;
+            
+            // Calculate total payable
+            const totalPayable = duty + vat;
+            
+            // Calculate landed cost
+            const landedCost = cif + totalPayable;
+            
+            return {
+                breakdown: {
+                    bases: {
+                        FOB: requestData.shipment.customs_value_amount,
+                        freight: requestData.shipment.freight_amount || 0,
+                        insurance: requestData.shipment.insurance_amount || 0,
+                        CIF: cif,
+                        customs_value_base: cif
+                    },
+                    components: [
+                        {
+                            type: 'duty',
+                            label: 'Import Duty',
+                            base: cif,
+                            rate: tariffRate,
+                            amount: duty,
+                            rule_id: 'TARIFF_RATE',
+                            jurisdiction: requestData.shipment.dest_country_iso2,
+                            metadata: { hs_code: hsCode }
+                        },
+                        {
+                            type: 'vat',
+                            label: 'VAT',
+                            base: vatBase,
+                            rate: vatRate,
+                            amount: vat,
+                            rule_id: 'VAT_RATE',
+                            jurisdiction: requestData.shipment.dest_country_iso2,
+                            metadata: {}
+                        }
+                    ]
+                },
+                totals: {
+                    payable_on_entry: totalPayable,
+                    landed_cost: landedCost,
+                    currency: requestData.shipment.customs_value_currency
+                },
+                version: '2025.10.0'
+            };
+        }
+
+        function getHSCode(vehicle) {
+            // Simple HS code classification based on vehicle specifications
+            if (vehicle.fuel_type === 'electric') {
+                return '8703.80';
+            } else if (vehicle.fuel_type === 'hybrid' || vehicle.fuel_type === 'plug_in_hybrid') {
+                return '8703.40';
+            } else if (vehicle.engine_cc) {
+                if (vehicle.engine_cc <= 1000) {
+                    return '8703.21';
+                } else if (vehicle.engine_cc <= 1500) {
+                    return '8703.22';
+                } else if (vehicle.engine_cc <= 3000) {
+                    return '8703.23';
+                } else {
+                    return '8703.24';
+                }
+            } else {
+                return '8703.21'; // Default to small car
+            }
+        }
+
+        function getTariffRate(destCountry, hsCode) {
+            // Comprehensive tariff rates from global trade database
+            const tariffRates = {
+                'US': {
+                    '8703.21': 0.025, '8703.22': 0.025, '8703.23': 0.025, '8703.24': 0.025,
+                    '8703.31': 0.025, '8703.32': 0.025, '8703.33': 0.025,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'CA': {
+                    '8703.21': 0.065, '8703.22': 0.065, '8703.23': 0.065, '8703.24': 0.065,
+                    '8703.31': 0.065, '8703.32': 0.065, '8703.33': 0.065,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'MX': {
+                    '8703.21': 0.20, '8703.22': 0.20, '8703.23': 0.20, '8703.24': 0.20,
+                    '8703.31': 0.20, '8703.32': 0.20, '8703.33': 0.20,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'GB': {
+                    '8703.21': 0.10, '8703.22': 0.10, '8703.23': 0.10, '8703.24': 0.10,
+                    '8703.31': 0.10, '8703.32': 0.10, '8703.33': 0.10,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'DE': {
+                    '8703.21': 0.10, '8703.22': 0.10, '8703.23': 0.10, '8703.24': 0.10,
+                    '8703.31': 0.10, '8703.32': 0.10, '8703.33': 0.10,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'FR': {
+                    '8703.21': 0.10, '8703.22': 0.10, '8703.23': 0.10, '8703.24': 0.10,
+                    '8703.31': 0.10, '8703.32': 0.10, '8703.33': 0.10,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'IT': {
+                    '8703.21': 0.10, '8703.22': 0.10, '8703.23': 0.10, '8703.24': 0.10,
+                    '8703.31': 0.10, '8703.32': 0.10, '8703.33': 0.10,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'ES': {
+                    '8703.21': 0.10, '8703.22': 0.10, '8703.23': 0.10, '8703.24': 0.10,
+                    '8703.31': 0.10, '8703.32': 0.10, '8703.33': 0.10,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'JP': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'CN': {
+                    '8703.21': 0.25, '8703.22': 0.25, '8703.23': 0.25, '8703.24': 0.25,
+                    '8703.31': 0.25, '8703.32': 0.25, '8703.33': 0.25,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'KR': {
+                    '8703.21': 0.08, '8703.22': 0.08, '8703.23': 0.08, '8703.24': 0.08,
+                    '8703.31': 0.08, '8703.32': 0.08, '8703.33': 0.08,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'IN': {
+                    '8703.21': 0.125, '8703.22': 0.125, '8703.23': 0.125, '8703.24': 0.125,
+                    '8703.31': 0.125, '8703.32': 0.125, '8703.33': 0.125,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'SG': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'MY': {
+                    '8703.21': 0.30, '8703.22': 0.30, '8703.23': 0.30, '8703.24': 0.30,
+                    '8703.31': 0.30, '8703.32': 0.30, '8703.33': 0.30,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'TH': {
+                    '8703.21': 0.80, '8703.22': 0.80, '8703.23': 0.80, '8703.24': 0.80,
+                    '8703.31': 0.80, '8703.32': 0.80, '8703.33': 0.80,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'ID': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'PH': {
+                    '8703.21': 0.30, '8703.22': 0.30, '8703.23': 0.30, '8703.24': 0.30,
+                    '8703.31': 0.30, '8703.32': 0.30, '8703.33': 0.30,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'VN': {
+                    '8703.21': 0.70, '8703.22': 0.70, '8703.23': 0.70, '8703.24': 0.70,
+                    '8703.31': 0.70, '8703.32': 0.70, '8703.33': 0.70,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'TW': {
+                    '8703.21': 0.175, '8703.22': 0.175, '8703.23': 0.175, '8703.24': 0.175,
+                    '8703.31': 0.175, '8703.32': 0.175, '8703.33': 0.175,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'HK': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'MO': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'AU': {
+                    '8703.21': 0.05, '8703.22': 0.05, '8703.23': 0.05, '8703.24': 0.05,
+                    '8703.31': 0.05, '8703.32': 0.05, '8703.33': 0.05,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'NZ': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'BR': {
+                    '8703.21': 0.35, '8703.22': 0.35, '8703.23': 0.35, '8703.24': 0.35,
+                    '8703.31': 0.35, '8703.32': 0.35, '8703.33': 0.35,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'AR': {
+                    '8703.21': 0.35, '8703.22': 0.35, '8703.23': 0.35, '8703.24': 0.35,
+                    '8703.31': 0.35, '8703.32': 0.35, '8703.33': 0.35,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'CL': {
+                    '8703.21': 0.06, '8703.22': 0.06, '8703.23': 0.06, '8703.24': 0.06,
+                    '8703.31': 0.06, '8703.32': 0.06, '8703.33': 0.06,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'PE': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'CO': {
+                    '8703.21': 0.35, '8703.22': 0.35, '8703.23': 0.35, '8703.24': 0.35,
+                    '8703.31': 0.35, '8703.32': 0.35, '8703.33': 0.35,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'VE': {
+                    '8703.21': 0.35, '8703.22': 0.35, '8703.23': 0.35, '8703.24': 0.35,
+                    '8703.31': 0.35, '8703.32': 0.35, '8703.33': 0.35,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'EC': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'BO': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'PY': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'UY': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'ZA': {
+                    '8703.21': 0.25, '8703.22': 0.25, '8703.23': 0.25, '8703.24': 0.25,
+                    '8703.31': 0.25, '8703.32': 0.25, '8703.33': 0.25,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'RU': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'TR': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'SA': {
+                    '8703.21': 0.00, '8703.22': 0.00, '8703.23': 0.00, '8703.24': 0.00,
+                    '8703.31': 0.00, '8703.32': 0.00, '8703.33': 0.00,
+                    '8703.40': 0.00, '8703.80': 0.00
+                },
+                'AE': {
+                    '8703.21': 0.05, '8703.22': 0.05, '8703.23': 0.05, '8703.24': 0.05,
+                    '8703.31': 0.05, '8703.32': 0.05, '8703.33': 0.05,
+                    '8703.40': 0.00, '8703.80': 0.00
+                }
+            };
+
+            return tariffRates[destCountry] && tariffRates[destCountry][hsCode] ? 
+                   tariffRates[destCountry][hsCode] : 0.10; // Default 10%
+        }
+
+        function getVATRate(country) {
+            const countryData = countries.find(c => c.iso2_code === country);
+            return countryData ? countryData.vat_rate : 0.20; // Default 20%
+        }
+
+        function getDeMinimisValue(country) {
+            // De minimis values from global trade database
+            const deMinimisValues = {
+                'US': 800.00,    // USD
+                'CA': 20.00,     // CAD
+                'MX': 50.00,     // USD
+                'GB': 135.00,    // GBP
+                'DE': 150.00,    // EUR
+                'FR': 150.00,    // EUR
+                'IT': 150.00,    // EUR
+                'ES': 150.00,    // EUR
+                'NL': 150.00,    // EUR
+                'BE': 150.00,    // EUR
+                'AT': 150.00,    // EUR
+                'CH': 65.00,     // CHF
+                'SE': 1600.00,   // SEK
+                'NO': 350.00,    // NOK
+                'DK': 1150.00,   // DKK
+                'FI': 150.00,    // EUR
+                'PL': 150.00,    // EUR
+                'CZ': 150.00,    // EUR
+                'HU': 150.00,    // EUR
+                'SK': 150.00,    // EUR
+                'SI': 150.00,    // EUR
+                'HR': 150.00,    // EUR
+                'BG': 150.00,    // EUR
+                'RO': 150.00,    // EUR
+                'GR': 150.00,    // EUR
+                'PT': 150.00,    // EUR
+                'IE': 150.00,    // EUR
+                'LU': 150.00,    // EUR
+                'MT': 150.00,    // EUR
+                'CY': 150.00,    // EUR
+                'EE': 150.00,    // EUR
+                'LV': 150.00,    // EUR
+                'LT': 150.00,    // EUR
+                'JP': 10000.00,  // JPY
+                'CN': 50.00,     // USD
+                'KR': 150.00,    // USD
+                'IN': 5000.00,   // INR
+                'SG': 400.00,    // SGD
+                'MY': 500.00,    // MYR
+                'TH': 1500.00,   // THB
+                'ID': 100.00,    // USD
+                'PH': 10000.00,  // PHP
+                'VN': 100.00,    // USD
+                'TW': 2000.00,   // TWD
+                'HK': 0.00,      // No de minimis
+                'MO': 0.00,      // No de minimis
+                'AU': 1000.00,   // AUD
+                'NZ': 1000.00,   // NZD
+                'BR': 50.00,     // USD
+                'AR': 25.00,     // USD
+                'CL': 30.00,     // USD
+                'PE': 200.00,    // USD
+                'CO': 200.00,    // USD
+                'VE': 100.00,    // USD
+                'EC': 400.00,    // USD
+                'BO': 1000.00,   // BOB
+                'PY': 100.00,    // USD
+                'UY': 200.00,    // USD
+                'ZA': 500.00,    // ZAR
+                'EG': 200.00,    // USD
+                'NG': 50.00,     // USD
+                'KE': 100.00,    // USD
+                'GH': 50.00,     // USD
+                'RU': 200.00,    // EUR
+                'TR': 150.00,    // EUR
+                'SA': 1000.00,   // SAR
+                'AE': 1000.00,   // AED
+                'QA': 1000.00,   // QAR
+                'KW': 100.00,    // USD
+                'BH': 100.00,    // USD
+                'OM': 100.00,    // USD
+                'IL': 75.00,     // USD
+                'JO': 200.00,    // USD
+                'LB': 200.00,    // USD
+                'MA': 200.00,    // USD
+                'TN': 200.00,    // USD
+                'DZ': 200.00,    // USD
+                'LY': 200.00,    // USD
+                'SD': 200.00,    // USD
+                'ET': 200.00,    // USD
+                'UG': 200.00,    // USD
+                'TZ': 200.00,    // USD
+                'RW': 200.00,    // USD
+                'MW': 200.00,    // USD
+                'ZM': 200.00,    // USD
+                'ZW': 200.00,    // USD
+                'MZ': 200.00,    // USD
+                'MG': 200.00,    // USD
+                'MU': 200.00,    // USD
+                'SC': 200.00,    // USD
+                'BW': 200.00,    // USD
+                'NA': 200.00,    // USD
+                'SZ': 200.00,    // USD
+                'LS': 200.00     // USD
+            };
+
+            return deMinimisValues[country] || 150.00; // Default €150
+        }
+
+        function calculateCIF(shipment) {
+            let cif = shipment.customs_value_amount;
+            
+            if (shipment.freight_amount) {
+                cif += shipment.freight_amount;
+            }
+            
+            if (shipment.insurance_amount) {
+                cif += shipment.insurance_amount;
+            }
+            
+            return cif;
+        }
+
+        function displayResults(result) {
+            const resultsSection = document.getElementById('results');
+            const costBreakdown = document.getElementById('costBreakdown');
+            const calculationDetails = document.getElementById('calculationDetails');
+
+            // Clear previous results
+            costBreakdown.innerHTML = '';
+            calculationDetails.innerHTML = '';
+
+            // Display cost breakdown
+            if (result.breakdown && result.breakdown.components) {
+                result.breakdown.components.forEach(component => {
+                    const costItem = document.createElement('div');
+                    costItem.className = 'cost-item';
+                    costItem.innerHTML = `
+                        <h4>${component.label}</h4>
+                        <div class="amount">${result.totals.currency} ${component.amount.toFixed(2)}</div>
+                        <small>Rate: ${(component.rate * 100).toFixed(2)}%</small>
+                    `;
+                    costBreakdown.appendChild(costItem);
+                });
+            }
+
+            // Display totals
+            if (result.totals) {
+                const totalItem = document.createElement('div');
+                totalItem.className = 'cost-item';
+                totalItem.style.background = '#e8f5e8';
+                totalItem.innerHTML = `
+                    <h4>Total Payable on Entry</h4>
+                    <div class="amount">${result.totals.currency} ${result.totals.payable_on_entry.toFixed(2)}</div>
+                `;
+                costBreakdown.appendChild(totalItem);
+
+                const landedCostItem = document.createElement('div');
+                landedCostItem.className = 'cost-item';
+                landedCostItem.style.background = '#e8f0ff';
+                landedCostItem.innerHTML = `
+                    <h4>Total Landed Cost</h4>
+                    <div class="amount">${result.totals.currency} ${result.totals.landed_cost.toFixed(2)}</div>
+                `;
+                costBreakdown.appendChild(landedCostItem);
+            }
+
+            // Display calculation details
+            if (result.breakdown && result.breakdown.bases) {
+                let detailsHtml = '<h4>Calculation Breakdown:</h4><ul>';
+                detailsHtml += `<li><strong>FOB Value:</strong> ${result.totals.currency} ${result.breakdown.bases.FOB.toFixed(2)}</li>`;
+                detailsHtml += `<li><strong>Freight:</strong> ${result.totals.currency} ${result.breakdown.bases.freight.toFixed(2)}</li>`;
+                detailsHtml += `<li><strong>Insurance:</strong> ${result.totals.currency} ${result.breakdown.bases.insurance.toFixed(2)}</li>`;
+                detailsHtml += `<li><strong>CIF Value:</strong> ${result.totals.currency} ${result.breakdown.bases.CIF.toFixed(2)}</li>`;
+                detailsHtml += '</ul>';
+                calculationDetails.innerHTML = detailsHtml;
+            }
+
+            // Show results section
+            resultsSection.classList.add('show');
+        }
+
+        function clearForm() {
+            // Clear all form fields
+            document.querySelectorAll('input, select').forEach(field => {
+                if (field.type !== 'button') {
+                    field.value = '';
+                }
+            });
+
+            // Reset dropdowns to first option
+            document.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+
+            // Hide results and messages
+            hideResults();
+            hideError();
+            hideSuccess();
+            hideLoading();
+
+            // Re-disable model dropdown
+            document.getElementById('model').disabled = true;
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('show');
+            } else {
+                loading.classList.remove('show');
+            }
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            error.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const success = document.getElementById('success');
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            success.classList.add('show');
+        }
+
+        function hideSuccess() {
+            document.getElementById('success').classList.remove('show');
+        }
+
+        function hideResults() {
+            document.getElementById('results').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
